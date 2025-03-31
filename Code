@@ -1,0 +1,62 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+
+np.random.seed(42)
+m = 100
+X = np.random.rand(m, 3) * [3000, 5, 20]
+true_theta = np.array([150, 20000, -5000])
+bias = 50000
+noise = np.random.randn(m) * 5000
+y = X.dot(true_theta) + bias + noise
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+X_scaled = np.c_[np.ones(m), X_scaled]
+
+theta = np.zeros(X_scaled.shape[1])
+alpha = 0.1
+iterations = 1000
+
+def compute_cost(X, y, theta):
+    m = len(y)
+    predictions = X.dot(theta)
+    errors = predictions - y
+    return (1 / (2 * m)) * np.sum(errors ** 2)
+
+def gradient_descent(X, y, theta, alpha, iterations):
+    m = len(y)
+    cost_history = []
+    
+    for _ in range(iterations):
+        gradient = (1 / m) * X.T.dot(X.dot(theta) - y)
+        theta -= alpha * gradient
+        cost_history.append(compute_cost(X, y, theta))
+    
+    return theta, cost_history
+
+theta, cost_history = gradient_descent(X_scaled, y, theta, alpha, iterations)
+
+plt.figure(figsize=(10, 6))
+plt.plot(range(iterations), cost_history, color='purple')
+plt.xlabel('Iterations')
+plt.ylabel('Cost')
+plt.title('Cost vs Iterations')
+plt.show()
+
+plt.figure(figsize=(10, 6))
+plt.scatter(X[:, 0], y, color='blue', label='Size (sq ft)')
+plt.scatter(X[:, 1], y, color='red', label='Bedrooms')
+plt.scatter(X[:, 2], y, color='green', label='Age')
+plt.xlabel('Feature Values')
+plt.ylabel('Cost')
+plt.title('Cost vs Features')
+plt.legend()
+plt.show()
+
+new_house = np.array([[2500, 4, 10]])
+new_house_scaled = scaler.transform(new_house)
+new_house_scaled = np.c_[np.ones(1), new_house_scaled]
+predicted_price = new_house_scaled.dot(theta)
+
+print(f'Predicted price: ${predicted_price[0]:,.2f}')
